@@ -7,11 +7,11 @@ def run_file_with_error_catching(filename):
         with open(filename, 'r') as file:
             code = file.read()
             exec(code)
-    except Exception:
+    except Exception :
         # f = open("Output.txt", "x")
         f = open("Output.txt", "w")
         f.write(f"An error occurred while executing '{filename}':") 
-        traceback.print_exc()
+        traceback.print_exc(file=f)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
