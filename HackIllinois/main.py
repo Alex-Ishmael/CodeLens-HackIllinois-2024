@@ -5,6 +5,7 @@ import os
 import argparse
 import traceback
 import subprocess
+import gemini as gm
 
 def run_command(command):
     print("Parent",os.getpid())
@@ -13,6 +14,7 @@ def run_command(command):
     print("Pid: ",sp.pid)
     print("Output: ",out)
     print("Error: ",err)
+    gm.error_lookup(str(err));
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a Linux command')
