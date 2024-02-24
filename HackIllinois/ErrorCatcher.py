@@ -12,6 +12,8 @@ def run_file_with_error_catching(filename):
         f = open("Output.txt", "w")
         f.write(f"An error occurred while executing '{filename}':") 
         traceback.print_exc(file=f)
+        print("Your program failed to execute, see Output.txt")
+        return
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
