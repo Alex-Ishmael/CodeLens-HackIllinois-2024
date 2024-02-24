@@ -1,0 +1,5 @@
+An error occurred while executing 'Test.py':Traceback (most recent call last):
+  File "C:\Users\Alex\Desktop\HackIllinois\ErrorCatcher.py", line 9, in run_file_with_error_catching
+    exec(code)
+  File "<string>", line 4, in <module>
+IndexError: list index out of range
