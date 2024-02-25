@@ -31,6 +31,7 @@ def error_lookup(prompt) :
   str += prompt
   response = model.generate_content(str)
   print(bcolors.OKBLUE + "\n",response.text,"\n" + bcolors.ENDC)
+  return response.text
 
 def tips(error, code) :
   model = genai.GenerativeModel('gemini-pro')
@@ -42,6 +43,7 @@ def tips(error, code) :
     str += "\n"
   response = model.generate_content(str)
   print(bcolors.OKCYAN + "\n",response.text,"\n" + bcolors.ENDC)
+  return response.text
 
 def links(error, code) :
   model = genai.GenerativeModel('gemini-pro')
@@ -53,3 +55,4 @@ def links(error, code) :
     str += "\n"
   response = model.generate_content(str)
   print(bcolors.OKGREEN + "\n",response.text,"\n" + bcolors.ENDC)
+  return response.text
