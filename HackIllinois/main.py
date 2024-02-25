@@ -1,6 +1,6 @@
 # python3 HackIllinois/main.py --command "python3 HackIllinois/Test.py"
 
-history_dir = "HackIllinois/history"
+history_dir = "history"
 
 import sys
 import os
@@ -41,12 +41,14 @@ def get_next_filename(directory, base_name='run', extension='txt'):
     files = [f for f in os.listdir(directory) if f.startswith(base_name) and f.endswith(f".{extension}")]
 
     if not files:
-        return f"{base_name}1.{extension}"
+        file_path = os.path.join(directory, f"{base_name}1.{extension}")
+        return file_path
 
     file_numbers = [int(file[len(base_name):-len(f'.{extension}')]) for file in files]
     next_file_number = max(file_numbers) + 1
+    file_path = os.path.join(directory, f"{base_name}{next_file_number}.{extension}")
 
-    return f"{base_name}{next_file_number}.{extension}"
+    return file_path
 
 
 def measure_max_memory(pid):
@@ -64,19 +66,23 @@ def measure_max_memory(pid):
 
     return max_memory
 
-def run_command(command):
+def run_command(command, output):
 
     try:
         start_time = datetime.datetime.now()
         sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), "MB",bcolors.ENDC)
+        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), " MB",bcolors.ENDC)
+        output.write("Memory: " + str(measure_max_memory(sp.pid)) + " MB\n")
         out, err = sp.communicate()
         end_time = datetime.datetime.now()
         duration = end_time - start_time
-        print(bcolors.OKGREEN, "Execution time: ",duration.microseconds/1000,"ms",bcolors.ENDC)
+        print(bcolors.OKGREEN, "Execution time: ",duration.microseconds/1000," ms",bcolors.ENDC)
+        output.write("Execution time: " + str(duration.microseconds/1000) + " ms\n")
         if sp.returncode != 0:
-            print(bcolors.WARNING,f"An error occurred while executing",bcolors.ENDC)
+            print(bcolors.WARNING,"An error occurred while executing",bcolors.ENDC)
             print(bcolors.FAIL,err.decode(),bcolors.ENDC)
+            output.write("An error occurred while executing\n")
+            output.write(err.decode() + "\n")
             lines = err.decode().strip().split('\n')
             error_message = lines[-1]
             match = re.search(r'File "([^"]+)", line (\d+), (.+)', err.decode())
@@ -85,6 +91,8 @@ def run_command(command):
                 print(bcolors.WARNING,f"The following error occurred in your code: {error_message}",bcolors.ENDC)
                 print(bcolors.WARNING,f"This error occurred in {filename} at line {line_number}",bcolors.ENDC)
                 print(bcolors.WARNING, "Start looking for bugs in the following section: \n")
+                output.write(f"This error occurred in {filename} at line {line_number}\n")
+                output.write("Start looking for bugs in the following section: \n")         
                 code = []
                 with open(filename) as file:
                     lines = file.readlines()
@@ -94,31 +102,47 @@ def run_command(command):
                         code.append(line.strip())
                         if (i == int(line_number)):
                             print(bcolors.FAIL, f"--> {i}: {line.strip()}",bcolors.ENDC)
+                            output.write(f"--> {i}: {line.strip()}\n")
                         else:
                             print(bcolors.OKGREEN, f"    {i}: {line.strip()}",bcolors.ENDC)
+                            output.write(f"    {i}: {line.strip()}\n")
                 # AI section
                 print("\nWhat your error means:")
-                print(gemini.error_lookup(str(error_message)))
+                out1 = gemini.error_lookup(str(error_message))
+                print(out1)
                 print("\nHere's some tips on what you can do for your specific code:")
-                print(gemini.tips(str(error_message), code))
+                out2 = gemini.tips(str(error_message), code)
+                print(out2)
                 print("\nHere's some resources to learn more:")
-                print(gemini.links(str(error_message), code))
+                out3 = gemini.links(str(error_message), code)
+                print(out3)
+                output.write("\nWhat your error means:\n")
+                output.write(out1 + "\n")
+                output.write("\nHere's some tips on what you can do for your specific code:\n")
+                output.write(out2 + "\n")
+                output.write("\nHere's some resources to learn more:\n")
+                output.write(out3 + "\n")
             else:
                 print("Line number information not found in the traceback.")
+                output.write("Line number information not found in the traceback.\n")
                 # You can also parse the stderr to extract specific error messages or line numbers
         else:
-            print("Output: ",out)
+            print("Output: ",out.decode())
+            output.write("Output: " + out.decode() + "\n")
     except Exception as e:
         print(f"An exception occurred while executing: \n{e}")
+        output.write(f"An exception occurred while executing: \n{e}\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a Linux command')
     parser.add_argument('--command', metavar='command', type=str, required=True, help='The Linux command to run')
 
     args = parser.parse_args()
-    print(args.command)
-    run_command(args.command)
     create_directory_if_not_exists(history_dir)
-    print(get_next_filename(history_dir))
-    update_history(args)
+    filename = get_next_filename(history_dir)
+    print(args.command)
+    file = open(filename, 'a')
+    run_command(args.command, file)
+    file.close()
+    print(filename)
     
