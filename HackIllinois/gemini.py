@@ -7,6 +7,17 @@ import google.generativeai as genai
 from IPython.display import display
 from IPython.display import Markdown
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 genai.configure(api_key = "AIzaSyB7AZkwAHmzWcs_2yiU4TbyUbb8GIQNB68")
 
 
@@ -19,7 +30,7 @@ def error_lookup(prompt) :
   str = "I'm encountering this error in my code: "
   str += prompt
   response = model.generate_content(str)
-  print("\n",response.text)
+  print(bcolors.OKBLUE + "\n",response.text,"\n" + bcolors.ENDC)
 
 def tips(error, code) :
   model = genai.GenerativeModel('gemini-pro')
@@ -30,7 +41,7 @@ def tips(error, code) :
     str += i
     str += "\n"
   response = model.generate_content(str)
-  print("\n",response.text)
+  print(bcolors.OKCYAN + "\n",response.text,"\n" + bcolors.ENDC)
 
 def links(error, code) :
   model = genai.GenerativeModel('gemini-pro')
@@ -41,4 +52,4 @@ def links(error, code) :
     str += i
     str += "\n"
   response = model.generate_content(str)
-  print("\n",response.text)
+  print(bcolors.OKGREEN + "\n",response.text,"\n" + bcolors.ENDC)

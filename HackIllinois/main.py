@@ -12,6 +12,7 @@ import datetime
 import time
 import re
 import gemini
+import pyfiglet
 
 class bcolors:
     HEADER = '\033[95m'
@@ -71,8 +72,12 @@ def run_command(command, output):
     try:
         start_time = datetime.datetime.now()
         sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), " MB",bcolors.ENDC)
-        output.write("Memory: " + str(measure_max_memory(sp.pid)) + " MB\n")
+        max_mem = measure_max_memory(sp.pid)
+        result = pyfiglet.figlet_format("CODE LENS", font="slant") 
+        print(bcolors.OKCYAN,"\n",result,"\n") 
+        time.sleep(2)
+        print(bcolors.OKGREEN,"Memory: ",max_mem, " MB",bcolors.ENDC)
+        output.write("Memory: " + str(max_mem) + " MB\n")
         out, err = sp.communicate()
         end_time = datetime.datetime.now()
         duration = end_time - start_time
@@ -107,15 +112,12 @@ def run_command(command, output):
                             print(bcolors.OKGREEN, f"    {i}: {line.strip()}",bcolors.ENDC)
                             output.write(f"    {i}: {line.strip()}\n")
                 # AI section
-                print("\nWhat your error means:")
+                print(bcolors.BOLD +"\nWhat your error means:" + bcolors.ENDC)
                 out1 = gemini.error_lookup(str(error_message))
-                print(out1)
-                print("\nHere's some tips on what you can do for your specific code:")
+                print(bcolors.BOLD + "\nHere's some tips on what you can do for your specific code:"+ bcolors.ENDC)
                 out2 = gemini.tips(str(error_message), code)
-                print(out2)
-                print("\nHere's some resources to learn more:")
+                print(bcolors.BOLD + "\nHere's some resources to learn more:"+ bcolors.ENDC)
                 out3 = gemini.links(str(error_message), code)
-                print(out3)
                 output.write("\nWhat your error means:\n")
                 output.write(out1 + "\n")
                 output.write("\nHere's some tips on what you can do for your specific code:\n")
@@ -127,10 +129,10 @@ def run_command(command, output):
                 output.write("Line number information not found in the traceback.\n")
                 # You can also parse the stderr to extract specific error messages or line numbers
         else:
-            print("Output: ",out.decode())
+            print(bcolors.BOLD,"Output: ",out.decode())
             output.write("Output: " + out.decode() + "\n")
     except Exception as e:
-        print(f"An exception occurred while executing: \n{e}")
+        # print(f"An exception occurred while executing: \n{e}")
         output.write(f"An exception occurred while executing: \n{e}\n")
 
 if __name__ == "__main__":
@@ -140,9 +142,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     create_directory_if_not_exists(history_dir)
     filename = get_next_filename(history_dir)
-    print(args.command)
+    # print(args.command)
     file = open(filename, 'a')
     run_command(args.command, file)
     file.close()
-    print(filename)
+    
+    print(bcolors.BOLD + "See the full report:"+ bcolors.ENDC, filename, "\n")
     
