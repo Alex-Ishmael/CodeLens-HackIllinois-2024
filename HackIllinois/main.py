@@ -1,17 +1,59 @@
 # python3 HackIllinois/main.py --command "python3 HackIllinois/Test.py"
 
+history_dir = "HackIllinois/history"
+
 import sys
 import os
+import psutil
 import argparse
 import traceback
 import subprocess
+import datetime
+import time
 import re
 
+def create_directory_if_not_exists(directory_path):
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
+
+def get_next_filename(directory, base_name='run', extension='txt'):
+    files = [f for f in os.listdir(directory) if f.startswith(base_name) and f.endswith(f".{extension}")]
+
+    if not files:
+        return f"{base_name}1.{extension}"
+
+    file_numbers = [int(file[len(base_name):-len(f'.{extension}')]) for file in files]
+    next_file_number = max(file_numbers) + 1
+
+    return f"{base_name}{next_file_number}.{extension}"
+
+
+def measure_max_memory(pid):
+    process = psutil.Process(pid)
+    max_memory = 0
+    done = False
+    while not done:
+        try:
+            memory_info = process.memory_info().rss/ 1024 ** 2
+            max_memory = max(max_memory, memory_info)
+            time.sleep(0.1)
+        except:
+            done = True
+            return max_memory
+
+    return max_memory
+
 def run_command(command):
-    print("Parent",os.getpid())
+
     try:
+        start_time = datetime.datetime.now()
         sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print("Memory: ",measure_max_memory(sp.pid), "MB")
         out, err = sp.communicate()
+        end_time = datetime.datetime.now()
+        duration = end_time - start_time
+        print("Execution time: ",duration.microseconds/1000,"ms")
         if sp.returncode != 0:
             print(f"An error occurred while executing")
             print("Traceback:")
@@ -32,6 +74,8 @@ def run_command(command):
             else:
                 print("Line number information not found in the traceback.")
                 # You can also parse the stderr to extract specific error messages or line numbers
+        else:
+            print("Output: ",out)
     except Exception as e:
         print(f"An exception occurred while executing: \n{e}")
 
@@ -42,4 +86,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args.command)
     run_command(args.command)
+    create_directory_if_not_exists(history_dir)
+    print(get_next_filename(history_dir))
     
