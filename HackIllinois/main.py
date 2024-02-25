@@ -11,6 +11,7 @@ import subprocess
 import datetime
 import time
 import re
+import gemini
 
 class bcolors:
     HEADER = '\033[95m'
@@ -22,6 +23,14 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+def update_history(args) :
+    if not os.path.isfile("HackIllinois/history/history_contents.txt") :
+        f = open("HackIllinois/history/history_contents.txt", "x")
+    
+    f = open("HackIllinois/history/history_contents.txt", "a")
+    f.write(str(args)+"\n")
+    f.close()
 
 def create_directory_if_not_exists(directory_path):
     if not os.path.exists(directory_path):
@@ -81,6 +90,7 @@ def run_command(command):
                             print(bcolors.FAIL,f"--> {i}: {line.strip()}", bcolors.ENDC)
                         else:
                             print(bcolors.OKGREEN,f"    {i}: {line.strip()}",bcolors.ENDC)
+                    gemini.error_lookup(str(err))
             else:
                 print("Line number information not found in the traceback.")
                 # You can also parse the stderr to extract specific error messages or line numbers
@@ -98,4 +108,5 @@ if __name__ == "__main__":
     run_command(args.command)
     create_directory_if_not_exists(history_dir)
     print(get_next_filename(history_dir))
+    update_history(args)
     
