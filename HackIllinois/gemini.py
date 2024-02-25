@@ -21,6 +21,24 @@ def error_lookup(prompt) :
   response = model.generate_content(str)
   print("\n",response.text)
 
+def tips(error, code) :
+  model = genai.GenerativeModel('gemini-pro')
+  str = "I'm encountering this error in my code: "
+  str += error
+  str += ". Give me some tips and potential code fixes based on my error and the following code: "
+  for i in code:
+    str += i
+    str += "\n"
+  response = model.generate_content(str)
+  print("\n",response.text)
 
-    
-
+def links(error, code) :
+  model = genai.GenerativeModel('gemini-pro')
+  str = "I'm encountering this error in my code: "
+  str += error
+  str += ". Give me some links and resources I can learn from based on my error and the following code: "
+  for i in code:
+    str += i
+    str += "\n"
+  response = model.generate_content(str)
+  print("\n",response.text)
