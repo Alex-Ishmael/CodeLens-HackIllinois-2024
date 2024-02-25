@@ -27,7 +27,7 @@ class bcolors:
 def update_history(args) :
     if not os.path.isfile("HackIllinois/history/history_contents.txt") :
         f = open("HackIllinois/history/history_contents.txt", "x")
-    
+
     f = open("HackIllinois/history/history_contents.txt", "a")
     f.write(str(args)+"\n")
     f.close()
@@ -69,28 +69,40 @@ def run_command(command):
     try:
         start_time = datetime.datetime.now()
         sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), "MB", bcolors.ENDC)
+        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), "MB",bcolors.ENDC)
         out, err = sp.communicate()
         end_time = datetime.datetime.now()
         duration = end_time - start_time
-        print(bcolors.OKGREEN, "Execution time: ",duration.microseconds/1000,"ms", bcolors.ENDC,"\n")
+        print(bcolors.OKGREEN, "Execution time: ",duration.microseconds/1000,"ms",bcolors.ENDC)
         if sp.returncode != 0:
-            print(bcolors.FAIL,"An error occurred while executing",bcolors.ENDC)
+            print(bcolors.WARNING,f"An error occurred while executing",bcolors.ENDC)
             print(bcolors.FAIL,err.decode(),bcolors.ENDC)
-            match = re.search(r'File "([^"]+)", line (\d+),', err.decode())
+            lines = err.decode().strip().split('\n')
+            error_message = lines[-1]
+            match = re.search(r'File "([^"]+)", line (\d+), (.+)', err.decode())
             if match:
-                filename, line_number = match.group(1), match.group(2)
-                print(bcolors.WARNING,f"Error occurred in {filename}, line {line_number}",bcolors.ENDC)
+                filename, line_number = match.group(1), int(match.group(2))
+                print(bcolors.WARNING,f"The following error occurred in your code: {error_message}",bcolors.ENDC)
+                print(bcolors.WARNING,f"This error occurred in {filename} at line {line_number}",bcolors.ENDC)
+                print(bcolors.WARNING, "Start looking for bugs in the following section: \n")
+                code = []
                 with open(filename) as file:
                     lines = file.readlines()
                     start = max(0, int(line_number) - 5)
                     end = min(len(lines), int(line_number) + 5)
                     for i, line in enumerate(lines[start:end], start + 1):
+                        code.append(line.strip())
                         if (i == int(line_number)):
-                            print(bcolors.FAIL,f"--> {i}: {line.strip()}", bcolors.ENDC)
+                            print(bcolors.FAIL, f"--> {i}: {line.strip()}",bcolors.ENDC)
                         else:
-                            print(bcolors.OKGREEN,f"    {i}: {line.strip()}",bcolors.ENDC)
-                    gemini.error_lookup(str(err))
+                            print(bcolors.OKGREEN, f"    {i}: {line.strip()}",bcolors.ENDC)
+                # AI section
+                print("\nWhat your error means:")
+                print(gemini.error_lookup(str(error_message)))
+                print("\nHere's some tips on what you can do for your specific code:")
+                print(gemini.tips(str(error_message), code))
+                print("\nHere's some resources to learn more:")
+                print(gemini.links(str(error_message), code))
             else:
                 print("Line number information not found in the traceback.")
                 # You can also parse the stderr to extract specific error messages or line numbers
@@ -104,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('--command', metavar='command', type=str, required=True, help='The Linux command to run')
 
     args = parser.parse_args()
-    print(bcolors.HEADER,"Executed command: ", args.command, bcolors.ENDC,"\n")
+    print(args.command)
     run_command(args.command)
     create_directory_if_not_exists(history_dir)
     print(get_next_filename(history_dir))
