@@ -12,6 +12,17 @@ import datetime
 import time
 import re
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def create_directory_if_not_exists(directory_path):
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
@@ -49,28 +60,27 @@ def run_command(command):
     try:
         start_time = datetime.datetime.now()
         sp = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("Memory: ",measure_max_memory(sp.pid), "MB")
+        print(bcolors.OKGREEN,"Memory: ",measure_max_memory(sp.pid), "MB", bcolors.ENDC)
         out, err = sp.communicate()
         end_time = datetime.datetime.now()
         duration = end_time - start_time
-        print("Execution time: ",duration.microseconds/1000,"ms")
+        print(bcolors.OKGREEN, "Execution time: ",duration.microseconds/1000,"ms", bcolors.ENDC,"\n")
         if sp.returncode != 0:
-            print(f"An error occurred while executing")
-            print("Traceback:")
-            print(err.decode())
+            print(bcolors.FAIL,"An error occurred while executing",bcolors.ENDC)
+            print(bcolors.FAIL,err.decode(),bcolors.ENDC)
             match = re.search(r'File "([^"]+)", line (\d+),', err.decode())
             if match:
                 filename, line_number = match.group(1), match.group(2)
-                print(f"Error occurred in {filename}, line {line_number}")
+                print(bcolors.WARNING,f"Error occurred in {filename}, line {line_number}",bcolors.ENDC)
                 with open(filename) as file:
                     lines = file.readlines()
                     start = max(0, int(line_number) - 5)
                     end = min(len(lines), int(line_number) + 5)
                     for i, line in enumerate(lines[start:end], start + 1):
                         if (i == int(line_number)):
-                            print(f"--> {i}: {line.strip()}")
+                            print(bcolors.FAIL,f"--> {i}: {line.strip()}", bcolors.ENDC)
                         else:
-                            print(f"    {i}: {line.strip()}")
+                            print(bcolors.OKGREEN,f"    {i}: {line.strip()}",bcolors.ENDC)
             else:
                 print("Line number information not found in the traceback.")
                 # You can also parse the stderr to extract specific error messages or line numbers
@@ -84,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument('--command', metavar='command', type=str, required=True, help='The Linux command to run')
 
     args = parser.parse_args()
-    print(args.command)
+    print(bcolors.HEADER,"Executed command: ", args.command, bcolors.ENDC,"\n")
     run_command(args.command)
     create_directory_if_not_exists(history_dir)
     print(get_next_filename(history_dir))
